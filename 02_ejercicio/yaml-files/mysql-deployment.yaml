@@ -4,6 +4,10 @@ metadata:
   name: mysql-deployment
 spec:
   replicas: 1
+  #The spec.selector field is required and must match the labels in spec.template.metadata.labels.
+  selector:
+    matchLabels:
+      app: mysql
   template:
     metadata:
       labels:
@@ -17,8 +21,8 @@ spec:
         - containerPort: 3306
         #dentro del contenedor se expondra en dir de los datos de la bbdd
         volumeMounts:
-        - mountPath: "/var/lib/mysql"
-        name: mysql-pd
+        - mountPath: /var/lib/mysql
+          name: mysql-pd
         #declarar variables de entorno
         env:
         - name: MYSQL_ROOT_PASSWORD
