@@ -27,9 +27,13 @@ Conectarnos con SSH
 1) Instalamos docker y docker-compose
 
 `$ sudo yum update -y`
+
 `$ sudo yum install docker -y`
+
 `$ sudo systemctl start docker`
+
 `$ sudo systemctl enable docker`
+
 `$ sudo usermod -aG docker $USER && newgrp docker`
 
 `$ sudo mkdir -p /usr/local/lib/docker/cli-plugins
