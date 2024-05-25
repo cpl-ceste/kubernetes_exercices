@@ -1,0 +1,18 @@
+ apiVersion: v1
+ kind: Service
+ metadata:
+  name: wordpress-service
+  labels:
+    app: wordpress
+ spec:
+  #this service is external
+  type: NodePort
+  ports:
+    #service's internal port (80)
+    #This is the port on the service itself. It’s the port that other pods within the cluster can use to access the service. When a pod sends a request to wordpress-service on port 80, the service routes the request to the appropriate pod.
+    - port: 80
+    #local port,  for accessing the service directly via the node's IP address and the specified node port (30080)
+    #This is the port on each node in the Kubernetes cluster. It exposes the service to external traffic. When you access a node's IP address on port 30080, Kubernetes routes the traffic to the service port (80), which in turn forwards the traffic to the pods that the service targets.
+      nodePort: 30080
+  selector:
+    app: wordpress

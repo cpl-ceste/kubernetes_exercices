@@ -1,4 +1,5 @@
 apiVersion: v1
+#resource type
 kind: PersistentVolume
 metadata:
   name: app-pv

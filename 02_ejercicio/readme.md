@@ -47,197 +47,122 @@ Desplegamos un volumen para almacenar los datos de MySQL de forma persistente
 
 `$ kubectl create -f mysql-deployment.yaml`
 
-2) Inspeccionamos el volumen y vemos que se han mapeado todos los contenidos del directorio del contenedor al volumen en nuestro host. Ver en Docker Desktop o en VStudio Code donde se ha creado el volumen y ver los ficheros. Podemos copiarlos o exportarlos a otro directorio
+2) Inspeccionamos que todo esta correcto
 
-3) En los ficheros del contenedor sobre-escribir el `index.html` por defecto de nginx, con el nuevo `index.html` que viene en el dir `static-site2` de este ejercicio y comprobar en la web que se ha actualizado
+`$ kubectl get pv`
 
-4) Borrar el contenedor y vemos que el volumen hay que borrarlo manualmente. En VStudio pueden borrarse todos los volumenes sin nombre no asociados a ningun contenedor. En DockerDesktop pueden borrarse y exportarse los volumenes.
+`$ kubectl get pvc`
 
-5) Arrancamos de nuevo el contendor y vemos que se crea otro volumen sin nombre diferente, los datos han persistido en el volumen anterior pero no estan en el nuevo. Observamos que en este caso la opcion --rm no borra volumenes con nombre
+`$ kubectl get deployments`
 
-`$docker run --rm -dp 8080:80 -v /usr/share/nginx/html nginx`
+## Crear un servicio para MySQL
 
-6) Parar contenedor, vemos que se borra el contenedor pero no el volumen
+1) Los pods son efímeros, para conectarnos a la Base de Datos necesitamos una IP que este desacoplada de los pods cuya IP puede cambiar cada vez que se crean. Para ello crearemos un servicio `mysql-service` que permitirá que la IP del servicio pueda resolverse desde dentro del DNS del ClusterIP
 
-### Volumenes con nombre
+`$ kubectl create -f mysql-service.yaml`
 
-1) Conectarse a DockerHub desde Docker Desktop y VStudio Code
+2) Verificamos que se creo correctamente y que se mapea correctamente con el Pod, porque  las IPs de los Endpoints IP del servicio es la direccion IP del Pod de MySQL
 
-`$ docker run -dp 8080:80 -v my-vol:/usr/share/nginx/html nginx`
+`$ kubectl describe svc/mysql-service`
+`$ kubectl get pods -o wide`
 
-2) Inspeccionamos el volumen y vemos que se han mapeado todos los contenidos del directorio del contenedor al volumen en nuestro host. Ver en Docker Desktop o en VStudio Code donde se ha creado el volumen y ver los ficheros. Podemos copiarlos o exportarlos a otro directorio
+## Desplegamos Wordpress
 
-3) En los ficheros del contenedor sobre-escribir el `index.html` por defecto de nginx, con el nuevo `index.html` que viene en el dir `static-site2` de este ejercicio y comprobar en la web que se ha actualizado
+1) Creamos un despliegue de wordpress
 
-4) Borrar el contenedor y vemos que el volumen hay que borrarlo manualmente. En VStudio pueden borrarse manualmente los volumenes con nombre. En DocekrDesktop pueden borrarse y exportarse los volumenes.
+`$ kubectl create -f wordpress-deployment.yaml`
 
-5) Arrancamos de nuevo el contendor y vemos que se utiliza el volumen con nombre, los datos han persistido y la web esta actualizada. Observamos que en este caso la opcion --rm no borra volumenes con nombre
+2) Verificamos el despliegue
 
-`$docker run --rm -dp 8080:80 -v my-vol:/usr/share/nginx/html nginx`
+`$ kubectl get deployments`
 
-6) Parar contenedor, vemos que se borra el contenedor pero no el volumen. Hay que borrarli manualmente
+`$ kubectl get pods`
 
+3) Entramos en uno de los pods con un terminal interactivo. 
+Nota: Hemos de poner el nombre del pod con el hash correcto
 
-### Mapeo de volumenes a directorios especificos del sistema (bind mounts)
+`$ kubectl exec -it wordpress-deployment-<hash del pod> -- bash`
 
-Creamos una aplicacion web lavantando una imagen de NGINX.
+4) Check the MySQL service can be accessed from the Pod
 
-1) Levantamos la aplicacion web mapeando un volumen en la ruta `static-site1` que es un directorio vacio. Creamos primero el directorio `static-site1`
+`$ getent hosts mysql-service`
 
-`$ docker run -dp 8080:80 -v ./static-site1:/usr/share/nginx/html nginx`
+5) Chequeamos la configuracion de WordPress
 
-NOTA IMPORTANTE: si le damos por equivocacion el nombre de un dir en el host o en el contenedor que no existen los creara vacios y no dara error. No despistarse, porque a veces nos equivocamos al escribir la rutas y los contenidos mapeados no coinciden con lo que pensamos
+`$ grep -i db /var/www/html/wp-config.php`
 
-2) en este caso vemos que no hay volumenes en DOCKER. Inspeccionamos el volumen y vemos que no se han mapeado todos los contenidos del directorio del contenedor al volumen en nuestro host. 
+Vemos que el pod de WordPress se ha configurado a sí mismo utilizando las variables de entorno "inyectadas" en el, utilizando los valores del secreto de Kubernetes que definimos anteriormente.
 
-3) Navegamos a la aplicacion web y vemos que no hay `index.html` para mostrar por defecto. Vemos en los logs del contenedor un `403 forbidden` y en el dir del contenedor `/usr/share/nginx/html` se ha mapeado el directorio vacio de nuestro host
+6) Salimos del Pod
 
-4) Borramos el contenedor y levantamos de nuevo la aplicacion web mapeando un volumen en la ruta `static-site2` que es el directorio con nuestra aplicacion web
+`$ exit`
 
-`$ docker run -dp 8080:80 -v $(pwd)/static-site2:/usr/share/nginx/html nginx`
+## Crear un servicio para WordPress
 
-3) En los ficheros del contenedor vemos que se ha sobre-escribito el `index.html` por defecto de nginx, con el nuevo `index.html` que viene en el dir `static-site2` de este ejercicio y comprobar en la web que se ha actualizado
+1) Creamos el servicio
 
-4) Navegamos a la pagina web y observamos los logs del servidor web en el contenedor
+`$ kubectl create -f wordpress-service.yaml`
 
-4) Borrar el contenedor y lo levantamos mapeando varios volumenes:
+El servicio es de tipo NodePort y será accesible desde la maquina EC2 donde tenemos instalado el cluster de minicube.
 
-`$ docker run -dp 8080:80 -v $(pwd)/static-site2:/usr/share/nginx/html -v $(pwd)/nginx-conf/nginx.conf:/etc/nginx/nginx.conf nginx`
+Utilizaremos:
 
-5) Observamos los logs del conendor y la pagina web de navegacion, ahora controlamos la configuracion del servidor y los contenidos de la web con los ficheros de nuestro directorio local. Podemos trabajar en desarrollo web.
+- puerto: 80: el puerto interno en el que escucha el servicio dentro del clúster
 
-6) Borramos el contenedor
+- nodePort: 30080: el puerto externo de cada nodo que se asigna al puerto interno del servicio, lo que permite el acceso desde fuera del clúster
 
-7) Borramos el contenedor y levantamos de nuevo la aplicacion web mapeando un volumen en la ruta `static-site2` que es el directorio con nuestra aplicacion web
 
-`$ docker run -dp 8080:80 -v $(pwd)/static-site2:/usr/share/nginx/html nginx`
+2) Verificamos el servicio
 
-8) Entramos en los ficheros del contendor y modificamos el fichero `index.html`. Vemos que el contenido del directorio mapeado del contenedor esta sincronizado con el contenido del dir de nuestro host `static-site2` y los cambios hechos dentro del contenedor se reflejan en el fichero `index.html`del host. los dos directorios estan sincronizados
+`$ kubectl describe svc/wordpress-service`
 
-9) Borramos el contenedor
+`$ kubectl get pods -o wide`
 
-10) Para evitar que procesos internos del contenedor modifiquen los ficheros de los volumenes mapeados y por ende los ficheros del host podemos mapear los volumenes en modo `readonly`. Lvantamos de nuevo la aplicacion web mapeando un volumen en modo `readonly`en la ruta `static-site2` que es el directorio con nuestra aplicacion web
+3) Comporbamos los puertos de comunicacion y accedemos al servicio, conectando con el nodo del cluster (minicube solo tiene un nodo)
 
-`$ docker run -dp 8080:80 -v $(pwd)/static-site2:/usr/share/nginx/html:ro nginx`
+`$ export NODE_PORT=$(kubectl get services/wordpress-service -o go-template='{{(index .spec.ports 0).nodePort}}')`
 
-11) Entramos en los ficheros del contendor y modificamos el fichero `index.html` vemos que esta en modo readonly y no podemos grabar los cambios.
+`$ echo NODE_PORT=$NODE_PORT`
 
-12) Borramos el contenedor
+Accedemos a la pagina principal de wordpress
+`$ curl $(minikube ip):$NODE_PORT`
 
-### Mapeo de volumenes con un usuario especifico
+Si se quiere solo ver el `status_code` de la respuesta
+`$ curl -s -o /dev/null -w "%{http_code}" $(minikube ip):$NODE_PORT`
 
-En ocasiones el contenedor corre con un usuario que es diferente del usuario del host y es posible que no tenga permisos para utilizar el sistema de ficheros del sistema local. Podemos especificar que el usuario que corre en el contenedor sea el mismo que el usuario local para solucionar este problema
+3) Exponemos el NodePort del nodo del cluster dentro del host. El comando `kubectl port-forward` reenvía un puerto local (30080) de la maquina EC2 al puerto interno del servicio (80) para acceder al servicio directamente desde fuera de la maquina EC2.
 
-Crearemos un contenedor con DBMS de MySQL.
+`$ kubectl port-forward --address 0.0.0.0 svc/wordpress-service --namespace default 30080:80`
 
-0) crear dos directorios vacios `dbms1`y `dbms2`
+3) Con un navegador accedemos al Wordpress site que esta publicado en el cluster de la maquina EC2 desde Internet
 
-1) Navegamos al dir `mysql` creamos un dir `dbms1`, vemos el usuario propietario y nos vamos a el
+`http://<ip EC2>:30080/`
 
-`$ mkdir dbms1`
+Nota: hay que abrir el puerto 30080 en la maquina EC3 para que pueda ser accesible el servicio desde Internet
 
-`$ ls -lnd dbms1`
+5) Borramos los despliegues, el volumen, el reclamo de volumen y los secretos. Para eliminar los recursos en Kubernetes de manera ordenada y correcta, hay que seguir una secuencia que respete las dependencias entre los recursos.
 
-`$ cd dbms1`
+En nuestro caso el orden recomendado para la eliminación sería eliminar los servicios y deployments antes de eliminar los volúmenes persistentes y los secretos:
 
-3) Corremos un contendor de MySQL con un mapeo de volumen, de forma que los datos de la base de datos se guarden en un dir local `data`. No hace falta que creemos el dir local, lo creara el contenedor cuando haga el mapeo.
+- Eliminar los servicios primero: Esto evita que haya tráfico hacia los pods mientras se están eliminando.
 
-`$ docker run -v $(pwd)/data:/var/lib/mysql -p 3306:3306 --name some-mysql -e MYSQL_ROOT_PASSWORD=1234 -d mysql`
+`$ kubectl delete -f wordpress-service.yaml`
 
-3) Vemos que el contenedor no logra arrancar, vemos los logs. Hay un problema de permisos para crear la base de datos en el dir local
+`$ kubectl delete -f mysql-service.yaml`
 
-4) Creamos otro dir nuevo en el raiz `02_ejercicio/mysql/dbms2` y nos vamos a el.
+- Eliminar los deployments: Esto eliminará los pods gestionados por los deployments.
 
-`$ cd ..`
+`$ kubectl delete -f wordpress-deployment.yaml`
+`$ kubectl delete -f mysql-deployment.yaml`
 
-`$ mkdir dbms2`
+- Eliminar los persistent volume claims (PVCs): Estos son utilizados por los pods para almacenar datos.
 
-`$ cd dbms2`
+`$ kubectl delete -f app-pvc.yaml`
 
-5) Corremos el contenedor especificando que se ejecute con nuestro UID
+- Eliminar los persistent volumes (PVs): Esto garantiza que los volúmenes persistentes sean liberados correctamente.
 
-`$ docker run -v $(pwd)/data:/var/lib/mysql -u 1000:1000 -p 3306:3306 --name some-mysql -e MYSQL_ROOT_PASSWORD=1234 -d mysql`
+`$ kubectl delete -f app-pv.yaml`
 
-6) Comprobamos si el contenedor arranca y le atachamos un shell para comprobar el id de usuario con el que ha arrancado
+- Eliminar los secretos (Secrets): Estos pueden ser eliminados al final, ya que no afectan el funcionamiento de los demás recursos.
 
-`$ id`
-
-7) Nos conectamos a la base de datos con un cliente mysql y comprobamos que funciona
-
-
-## Contenedores: Redes
-
-Docker crea en los contenedores interfaces de red y les asigna una direccion IP. Si no se especifica la red en la quiere que se levanten cuando arrancan, se conectarán a la red predeterminada.
-
-Tambien puede crearse una red y conectarlos a ella. Varios contenedores conectados a la misma red pueden comunicarse entre si.
-Cuando se crea una red, se tiene un servicio de nombres de dominio para los contenedores y pueden direccionarse por el nombre del contenedor.
-
-### Comunicacion entre contenedores en la red default
-
-Cuando levantamos un contenedor y no especificamos en que red se levanta, lo hará en la red default
-Levantaremos con un servidor DBMS de MySQL y otro con un cliente de MySQL.
-
-Nos conectaremos al servidor desde el cliente, como ambos estan en la misma red el cliente puede comunicarse con el 
-
-
-1) En el directorio `dbms1` levantamos el contenedor del servidor de MySQL con el nombre `some-server`
-
-`$ docker run -v $(pwd)/data:/var/lib/mysql -u 1000:1000 -p 3306:3306 --name some-server -e MYSQL_ROOT_PASSWORD=1234 -d mysql`
-
-3) Vemos las redes que hay en Docker con VStudio Code o Docker Desktop. Vemos la red con driver `bridge` y que el contenedor se ha levantado en ella. Puede verse si inspeccionamos la red.
-
-Podemos ver la direccion IP del contenedor con el comando:
-
-`$ docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' some-server`
-
-4) Levantamos otro contenedor de MySQL que ejecuta el comando de cliente `mysql` para conectarse al contenedor servidor.
-
-- prueba que puedes conectarte con la direccion IP en `<poner la IP>`
-
-`$ docker run -it --rm mysql mysql -h <poner la IP> -uroot -p`
-
-Una vez conectados ejecutamos algun comando para comprobar su funcionamiento:
-
-`SHOW DATABASES;`
-`EXIT`
-
-5) Borramos el contenedor y vemos que la red por defecto se mantiene
-
-### Comunicacion entre contenedores en una red con nombre
-
-Crearemos una red y levantamos un contenedor con un servidor DBMS de MySQL y otro con un cliente de MySQL.
-
-Nos conectaremos al servidor desde el cliente, como ambos estan en la misma red el cliente pueden encontrarse y nos conectaremos a el con un contenedor cliente
-
-1) Creamos una red
-
-`$ docker network create -d bridge my-net`
-
-2) En el directorio `dbms1` levantamos el contenedor del servidor de MySQL con el nombre `some-server` en esta red
-
-`$ docker run -v $(pwd)/data:/var/lib/mysql --network=my-net -u 1000:1000 -p 3306:3306 --name some-server -e MYSQL_ROOT_PASSWORD=1234 -d mysql`
-
-3) Vemos las redes que hay en Docker con VStudio Code o Docker Desktop. Vemos la red `my-net` y que el contenedor se ha levantado en ella.
-
-Puede verse si inspeccionamos la red. La red tiene driver `bridge`.
-
-Podemos ver la direccion IP del contenedor con el comando:
-
-`docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' some-server`
-
-4) Levantamos otro contenedor de MySQL que ejecuta el comando de cliente `mysql` para conectarse al contenedor servidor.
-
-- prueba que puedes conectarte con la direccion IP
-
-`docker run -it --network my-net --rm mysql mysql -h <IP> -uroot -p`
-
-- prueba que puedes conectarte con el nombre del contenedor
-
-`docker run -it --network my-net --rm mysql mysql -hsome-server -uroot -p`
-
-Una vez conectados ejecutamos algun comando para comprobar su funcionamiento:
-
-`SHOW DATABASES;`
-`EXIT`
-
-5) Borramos el contenedor y vemos que la red hay que borrarla de forma manual
+`$ kubectl delete -f app-secret.yaml`

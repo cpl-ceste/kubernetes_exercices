@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-deployment
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  #The spec.selector field is required and must match the labels in spec.template.metadata.labels.
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - name: worpress
+        #la imagen es la oficial de mysql de dockerhub
+        image: wordpress
+        ports:
+        - containerPort: 80
+        #declarar variables de entorno
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql-service
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: dbuser
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: dbpass
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: dbname
