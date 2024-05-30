@@ -38,7 +38,7 @@ Desplegaremos una aplicacion sencilla para interactuar con todos los componenete
 
 `$ sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl`
 
-Comprobamos instalacion
+Comprobamos instalación
 
 `$ kubectl version --client`
 
