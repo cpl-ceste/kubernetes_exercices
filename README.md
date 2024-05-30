@@ -1,2 +1,2 @@
-# docker_exercices
+# Kubernetes_exercices
  Guide and files for exercices

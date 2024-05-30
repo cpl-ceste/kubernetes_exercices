@@ -12,6 +12,16 @@ Desplegaremos una aplicacion sencilla para interactuar con todos los componenete
 
 2) Servidor Amazon Linux 2 (t2.medium: 2vCPU, 2GB free RAM, 20GB free disk)
 
+3) Conectarse con SSH
+
+Primero dar permisos de solo lectura a la llave, porque AWS exige esta medida de seguridad para permitir la conexion
+
+`$ chmod 400 key_file.pem`
+
+Conectarnos con SSH
+
+`$ ssh -i "key_file.pem" ec2-user@ip-publica-ec2`
+
 ### Instalamos el sorftware del entorno de trabajo en la maquina
 
 1) Instalamos docker y docker-compose
