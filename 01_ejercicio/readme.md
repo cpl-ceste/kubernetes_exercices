@@ -38,9 +38,9 @@ Conectarnos con SSH
 
 `$ sudo mkdir -p /usr/local/lib/docker/cli-plugins`
 
-`$ sudo curl -sL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/local/lib/docker/cli-plugins/docker-compose`
+`$ sudo curl -L https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose`
 
-`$ sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose`
+`$ sudo chmod +x /usr/local/bin/docker-compose`
 
 2) Instalamos `kubectl` la aplicacion CLI de acceso a Kubernetes
 
