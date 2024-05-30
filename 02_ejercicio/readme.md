@@ -12,14 +12,18 @@ Crear Secretos para el paso seguro de info.
 1) Codificar la info en base64 (opcion -n para no incluir newline en la codificacion)
 
 `$ echo -n "app-db" | base64`
+
 `$ echo -n "app-user" | base64`
+
 `$ echo -n "app-pass" | base64`
+
 `$ echo -n "app-rootpass" | base64`
 
 2) Crear el secreto
 
-`kubectl create -f app-secret.yaml`
-`kubectl get secrets`
+`$ kubectl create -f app-secret.yaml`
+
+`$ kubectl get secrets`
 
 ## Crear un VOLUMEN PERSISTENTE
 
@@ -32,6 +36,7 @@ Desplegamos un volumen para almacenar los datos de MySQL de forma persistente
 2) Creamos el volumen persistente
 
 `$ kubectl create -f app-pv.yaml`
+
 `$ kubectl describe pv/app-pv`
 
 ## Hacer un CLAIM de un VOLUMEN PERSISTENTE
@@ -64,6 +69,7 @@ Desplegamos un volumen para almacenar los datos de MySQL de forma persistente
 2) Verificamos que se creo correctamente y que se mapea correctamente con el Pod, porque  las IPs de los Endpoints IP del servicio es la direccion IP del Pod de MySQL
 
 `$ kubectl describe svc/mysql-service`
+
 `$ kubectl get pods -o wide`
 
 ## Desplegamos Wordpress
@@ -125,9 +131,11 @@ Utilizaremos:
 `$ echo NODE_PORT=$NODE_PORT`
 
 Accedemos a la pagina principal de wordpress
+
 `$ curl $(minikube ip):$NODE_PORT`
 
 Si se quiere solo ver el `status_code` de la respuesta
+
 `$ curl -s -o /dev/null -w "%{http_code}" $(minikube ip):$NODE_PORT`
 
 3) Exponemos el NodePort del nodo del cluster dentro del host. El comando `kubectl port-forward` reenvía un puerto local (30080) de la maquina EC2 al puerto interno del servicio (80) para acceder al servicio directamente desde fuera de la maquina EC2.
@@ -153,6 +161,7 @@ En nuestro caso el orden recomendado para la eliminación sería eliminar los se
 - Eliminar los deployments: Esto eliminará los pods gestionados por los deployments.
 
 `$ kubectl delete -f wordpress-deployment.yaml`
+
 `$ kubectl delete -f mysql-deployment.yaml`
 
 - Eliminar los persistent volume claims (PVCs): Estos son utilizados por los pods para almacenar datos.
