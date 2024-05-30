@@ -66,18 +66,20 @@ Comprobamos instalación
 `$ sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64`
 
 Comprobamos instalacion
+
 `$ minikube version`
 
-Y como `kubectl`esta conectado al cluster
+Y si `kubectl`esta conectado al cluster (si el cluster no esta arrancado, veremos que no podemos conectar)
+
 `$ kubectl version`
 
 ## Crear el cluster
 
-Al instalarse Minikube se instala Kuberneter con un cluster con solo nodo. Arrancamos el cluster
+Al instalarse Minikube se instala Kubernetes con un cluster con solo nodo. Arrancamos el cluster
 
 `$ minikube start`
 
-Hemos instalado tambien kubectl herramienta CLI para comunicarnos con Kubernetes. Chequeamos la info del cluster y vemos los nodos (--help para ver todos las opciones del comando `get nodes`)
+Hemos instalado tambien `kubectl` herramienta CLI para comunicarnos con Kubernetes. Chequeamos la info del cluster y vemos los nodos (`--help` para ver todos las opciones del comando `get nodes`)
 
 `$ kubectl cluster-info`
 
@@ -110,7 +112,7 @@ En otra terminal crear un proxy que expone el endpoint por pod. Usamos el comand
 
 `$ echo -e "Starting Proxy. After starting it will not output a response. Please return to your original terminal window\n“`
 
-`kubectl proxy`
+`$ kubectl proxy`
 
 3) Accedemos al Pod (API endpoint version) que esta desplegado desde el terminal de la maquina EC2 (server host del cluster)
 
@@ -118,10 +120,12 @@ En otra terminal crear un proxy que expone el endpoint por pod. Usamos el comand
 
 Creamos una variable de entorno para recoger el nombre del Pod
 
-`$export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
-echo Name of the Pod: $POD_NAME`
+`$ export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')`
+
+`$ echo Name of the Pod: $POD_NAME `
 
 Accedemos al pod (url the route al API del Pod)
+
 `$ curl http://localhost:8001/api/v1/namespaces/default/pods/$POD_NAME`
 
 4) Exploramos la aplicacion
@@ -146,13 +150,16 @@ Accedemos a los logs
 
 Listamos las variables de entorno del contenedor que hay en el Pod (como solo hay uno no hay que especificarlo)
 
-`$ kubectl exec $POD_NAME – env`
+`$ kubectl exec $POD_NAME -- env`
 
 Abrimos una terminal bash interactiva dentro del contenedor del Pod y ejecutamos algunos comandos
 
 `$ kubectl exec -ti $POD_NAME -- bash`
+
 `$ cat server.js`
+
 `$ curl localhost:8080`
+
 `$ exit`
 
 ## Exponer o publicar una aplicación
