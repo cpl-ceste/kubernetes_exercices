@@ -42,6 +42,12 @@ Conectarnos con SSH
 
 `$ sudo chmod +x /usr/local/bin/docker-compose`
 
+Chequeamos la instalación
+
+`$ docker version`
+
+`$ docker-compose version`
+
 2) Instalamos `kubectl` la aplicacion CLI de acceso a Kubernetes
 
 `$ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"`
