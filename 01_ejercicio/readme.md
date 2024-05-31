@@ -162,6 +162,32 @@ Abrimos una terminal bash interactiva dentro del contenedor del Pod y ejecutamos
 
 `$ exit`
 
+## Visualizar el deployment en el Dashboard de Kubernetes
+
+Creamos un tunnel para acceder al Dashboard de Kubernetes de Minikube
+
+1) En una nueva terminal de conexion SSH a la instancia EC2 consultamos la lista de addons de minikube y comprobamos que tenemos el dashboard
+
+`$ minikube addons list`
+
+2) Consultamos la url en la que se expone el dashboard
+
+`$ minikube dashboard --url`
+
+La url será una cadena con el siguiente formato, por ejemplo, donde vemos que el puerto en el que se consume es el 36991 (REMOTE PORT)
+
+`http://127.0.0.1:36991/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/`
+
+
+3) En una terminal ssh nueva configuramos el tunel ssh para mapear el puerto del servicio de dashboard en nuestra maquina local
+
+`$ ssh -i <EC2_KEY.pem> -N -L <LOCALPORT>:localhost:<DASHBOARD REMOTE PORT> ec2-user@<IP EC2>`
+
+4) Localmente en nuestra maquina podemos acceder ahora a la aplicacion del Dashboard de Kubernetes en el puerto `<LOCALPORT>`
+
+`http://localhost:<LOCALPORT>/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/`
+
+
 ## Exponer o publicar una aplicación
 
 Crear un servicio y exponerlo para que sea acesible desde el exterior del cluster
