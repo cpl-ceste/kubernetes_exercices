@@ -219,7 +219,7 @@ Accedemos a la app desde la consola de EC2
 
 Hacemos un forward del puerto de NodePort al puerto del servicio para poder accederlo directamente desde fuera de la maquina EC2
 
-`$ kubectl port-forward –address 0.0.0.0 svc/kubernetes-bootcamp -- namespace default 8080:8080`
+`$ kubectl port-forward --address 0.0.0.0 svc/kubernetes-bootcamp -- namespace default 8080:8080`
 
 ## Trabajar con etiquetas
 
