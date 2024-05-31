@@ -214,7 +214,7 @@ Vemos la IP y el NodePort de acceso externo del cluster al servicio
 `$ echo NODE_PORT=$NODE_PORT`
 
 Accedemos a la app desde la consola de EC2
-#access the app in the host and out-side with port-forward
+
 `$ curl $(minikube ip):$NODE_PORT`
 
 Hacemos un forward del puerto de NodePort al puerto del servicio para poder accederlo directamente desde fuera de la maquina EC2
