@@ -234,11 +234,13 @@ Listamos todos los pods que tienen una determinada etiqueta
 `$ kubectl get services -l app=kubernetes-bootcamp`
 
 Podemos aplicar nuevas etiquetas
-`$ kubectl label pods $POD_NAME version=v1`$ 
+
+`$ kubectl label pods $POD_NAME version=v1`
 
 Comprobamos que las etiquetas estan asignadas a los pods
 
 `$ kubectl describe pods $POD_NAME`
+
 `$ kubectl get pods -l version=v1`
 
 ## Borrar un servicio
@@ -246,7 +248,9 @@ Comprobamos que las etiquetas estan asignadas a los pods
 Podemos borrar el servicio
 
 `$ kubectl get services`
+
 `$ kubectl delete service -l app=kubernetes-bootcamp`
+
 `$ kubectl get services`
 
 Vemos que ya no esta accesible en el cluster
@@ -271,7 +275,9 @@ Veamos el `ReplicaSet`creado por el despliegue
 `$ kubectl get rs`
 
 Escalamos el despliegue a 4 replicas
+
 `$ kubectl scale deployments/kubernetes-bootcamp --replicas=4`
+
 `$ kubectl get deployments`
 
 Veamos el numero de Pods del despliegue
@@ -348,7 +354,9 @@ Vemos el estado del despliegue
 Hacmeos un `RollBack` del despleigue a la ultima version que funciona
 
 `$ kubectl rollout undo deployments/kubernetes-bootcamp`
+
 `$ kubectl get pods`
+
 `$ kubectl describe pods`
 
 ## Borramos el despleigue
